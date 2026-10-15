@@ -79,7 +79,7 @@ def GenerateAdd(boardPosition):
 
     for location in range(len(boardPosition)):
         if boardPosition[location] == "x":
-            newBoard = (boardPosition[:location] + "W" + boardPosition[location + 1:])
+            newBoard = (boardPosition[:location] + "B" + boardPosition[location + 1:])
 
             if closeMill(location, newBoard):
                 GenerateRemove(newBoard, L)
@@ -90,14 +90,14 @@ def GenerateAdd(boardPosition):
 def GenerateRemove(boardPosition, L):
     originalLength = len(L)
     for location in range(len(boardPosition)):
-        if boardPosition[location] == "B":
+        if boardPosition[location] == "W":
             if not closeMill(location, boardPosition):
                 newBoard = (boardPosition[:location] + "x" + boardPosition[location + 1:])
                 L.append(newBoard)
 
     if len(L) == originalLength:
         for location in range(len(boardPosition)):
-            if boardPosition[location] == "B":
+            if boardPosition[location] == "W":
                 newBoard = (boardPosition[:location] + "x" + boardPosition[location + 1:])
                 L.append(newBoard)
     return
@@ -105,7 +105,7 @@ def GenerateRemove(boardPosition, L):
 def staticEstimation(board):
     return (board.count("W") - board.count("B"))
 
-def ABOpening(boardPosition, depth, alpha = float("-inf"), beta = float("inf")):
+def MiniMaxOpeningBlack(boardPosition, depth):
     global positionsEvaluated
 
     if depth == 0:
@@ -118,20 +118,15 @@ def ABOpening(boardPosition, depth, alpha = float("-inf"), beta = float("inf")):
         positionsEvaluated += 1
         return staticEstimation(boardPosition), boardPosition
 
-    bestEstimate = float("-inf")
+    bestEstimate = float("inf")
     bestBoard = boardPosition
 
     for move in moves:
-        estimate, _ = ABOpening(move, depth - 1, alpha, beta)
+        estimate, _ = MiniMaxOpeningBlack(move, depth - 1)
 
-        if estimate > bestEstimate:
+        if estimate < bestEstimate:
             bestEstimate = estimate
             bestBoard = move
-
-        alpha = max(alpha, bestEstimate)
-
-        if alpha >= beta:
-            break
 
     return bestEstimate, bestBoard
 
@@ -141,7 +136,7 @@ def main():
     import sys
 
     if (len(sys.argv) != 4):
-        print("python ABOpening.py inputBoard outputBoard searchDepth")
+        print("python MiniMaxOpeningBlack.py inputBoard outputBoard searchDepth")
         return 1
     
     inputBoardFile = sys.argv[1]
@@ -151,7 +146,7 @@ def main():
     with open(inputBoardFile, "r") as f:
         board = f.read().strip()
 
-    estimate, bestBoard = ABOpening(board, searchDepth)
+    estimate, bestBoard = MiniMaxOpeningBlack(board, searchDepth)
 
     print("Board Position:", bestBoard)
     print("Positions evaluated by static estimation:", positionsEvaluated)
